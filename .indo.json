@@ -1,0 +1,7 @@
+{
+  "repos": {
+    "vendor/git-patch-parser": {
+      "url": "https://github.com/aleclarson/git-patch-parser.git"
+    }
+  }
+}

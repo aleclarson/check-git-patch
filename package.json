@@ -1,0 +1,32 @@
+{
+  "name": "check-git-patch",
+  "version": "1.0.0",
+  "description": "Find conflicts in a git patch",
+  "main": "lib/index.js",
+  "bin": "bin/check-git-patch",
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "keywords": [
+    "git",
+    "git-patch",
+    "patch",
+    "diff",
+    "validate",
+    "check"
+  ],
+  "author": "Alec Larson",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/fs-extra": "^8.0.1",
+    "prettier": "^1.18.2",
+    "tslint": "^5.20.0",
+    "tslint-mango": "^0.1.12",
+    "typescript": "^3.6.4"
+  },
+  "dependencies": {
+    "fs-extra": "^8.1.0",
+    "git-patch-parser": "^0.2.0",
+    "slurm": "^0.5.9"
+  }
+}
