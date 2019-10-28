@@ -1,0 +1,13 @@
+{
+  "include": ["src"],
+  "compilerOptions": {
+    "declaration": true,
+    "lib": ["es2017"],
+    "moduleResolution": "node",
+    "noUnusedLocals": true,
+    "outDir": "lib",
+    "sourceMap": true,
+    "strict": true,
+    "target": "es5"
+  }
+}
