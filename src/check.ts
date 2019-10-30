@@ -95,7 +95,8 @@ function getLineConflicts(
         error: `Output range has length of ${outputRange.length}, but ${newLength} lines exist in the diff.`,
       })
     }
-    if (outputRange.start !== inputRange.start + offset) {
+    const expectedLength = newLength > 0 ? inputRange.start + offset : 0
+    if (outputRange.start !== expectedLength) {
       conflicts.push({
         file,
         line: inputRange.start,
