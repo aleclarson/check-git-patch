@@ -12,7 +12,8 @@
   "repository": "aleclarson/check-git-patch",
   "scripts": {
     "build": "tsc -p .",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "release": "git push && git push --tags && npm publish"
   },
   "keywords": [
     "git",
