@@ -11,7 +11,8 @@
   ],
   "repository": "aleclarson/check-git-patch",
   "scripts": {
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "prepare": "npm run build"
   },
   "keywords": [
     "git",
