@@ -24,9 +24,10 @@
   "author": "Alec Larson",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^2.4.2",
+    "chokidar": "^3.2.3",
     "fs-extra": "^8.1.0",
     "git-patch-parser": "npm:@alloc/git-patch-parser@^1.0.0",
+    "lodge": "^0.1.4",
     "slurm": "^0.5.9"
   },
   "devDependencies": {

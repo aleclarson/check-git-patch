@@ -1,15 +1,37 @@
+import log from 'lodge'
 import slurm from 'slurm'
-import chalk from 'chalk'
+import { watch } from 'chokidar'
 import { check } from './check'
 import { existsSync, readFileSync } from 'fs-extra'
 
 const prefix = '\n💥  '
 
 export function run() {
+  const args = slurm({
+    w: { type: 'boolean' },
+  })
+
+  if (args.w) {
+    return watch(args).on('all', () => {
+      log.clear()
+      if (!printConflicts(args)) {
+        log('\n✨  No conflicts found.')
+      }
+    })
+  }
+
+  if (printConflicts(args)) {
+    process.exit(1)
+  } else {
+    log('\n✨  No conflicts found.')
+  }
+}
+
+function printConflicts(args: string[]) {
   let failed = false
-  slurm().forEach(patchFile => {
+  args.forEach(patchFile => {
     if (!existsSync(patchFile)) {
-      console.log(prefix + 'Patch does not exist: %s', chalk.yellow(patchFile))
+      log(prefix + 'Patch does not exist: %s', log.yellow(patchFile))
       return (failed = true)
     }
 
@@ -27,19 +49,16 @@ export function run() {
     let range: Range | undefined
     conflicts.forEach(({ file, dest, line, text = '', error }) => {
       if (error) {
-        console.log(
+        log(
           prefix + 'Diff for line %O of %s is corrupted:\n%s',
           line,
-          chalk.yellow(file),
-          chalk.red(error)
+          log.yellow(file),
+          log.red(error)
         )
       } else if (dest) {
-        console.log(
-          prefix + 'Rename failed. File already exists:',
-          chalk.yellow(dest)
-        )
+        log(prefix + 'Rename failed. File already exists:', log.yellow(dest))
       } else if (line == null) {
-        console.log(prefix + 'File does not exist:', chalk.yellow(file))
+        log(prefix + 'File does not exist:', log.yellow(file))
       } else {
         if (range && file == range.file && line == range.start - 1) {
           range.text = text + '\n' + range.text
@@ -54,8 +73,8 @@ export function run() {
     ranges.forEach(range => {
       const lines = readFileSync(range.file, 'utf8').split(/\r?\n/)
 
-      const expected = chalk.green(range.text.replace(/^/gm, ' + '))
-      const actual = chalk.red(
+      const expected = log.green(range.text.replace(/^/gm, ' + '))
+      const actual = log.red(
         lines
           .slice(range.start - 1, range.line)
           .join('\n')
@@ -63,29 +82,24 @@ export function run() {
       )
 
       if (range.start == range.line) {
-        console.log(
+        log(
           prefix + 'Line %O of %s does not match:\n%s\n%s',
           range.start,
-          chalk.yellow(range.file),
+          log.yellow(range.file),
           actual,
           expected
         )
       } else {
-        console.log(
+        log(
           prefix + 'Lines %O-%O of %s do not match:\n%s\n%s',
           range.start,
           range.line,
-          chalk.yellow(range.file),
+          log.yellow(range.file),
           actual,
           expected
         )
       }
     })
   })
-
-  if (failed) {
-    process.exit(1)
-  } else {
-    console.log('\n✨  No conflicts found.')
-  }
+  return failed
 }
