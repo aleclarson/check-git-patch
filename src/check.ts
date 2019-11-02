@@ -56,12 +56,11 @@ export function check(patchFile: string) {
 }
 
 type Change = {
-  type: string
   file: string
   diff: DiffChunk[]
 }
 
-function getLineConflicts({ type, file, diff }: Change, conflicts: Conflict[]) {
+function getLineConflicts({ file, diff }: Change, conflicts: Conflict[]) {
   let offset = 0 // Line offset from preceding chunks in the same file.
   const lines = readFileSync(file, 'utf8').split(/\r?\n/)
   for (const chunk of diff) {
@@ -83,7 +82,7 @@ function getLineConflicts({ type, file, diff }: Change, conflicts: Conflict[]) {
     }
 
     const { inputRange, outputRange } = chunk
-    if (type !== 'rename' || !isNaN(inputRange.length)) {
+    if (!isNaN(inputRange.length) || oldLength !== newLength) {
       if (oldLength !== inputRange.length) {
         conflicts.push({
           file,
