@@ -47,7 +47,7 @@ export function check(patchFile: string) {
           }
         }
       } else if ('diff' in change) {
-        getLineConflicts(file, change.diff, conflicts)
+        getLineConflicts(change, conflicts)
       }
     }
   }
@@ -55,14 +55,16 @@ export function check(patchFile: string) {
   return { patches, conflicts }
 }
 
-function getLineConflicts(
-  file: string,
-  chunks: DiffChunk[],
-  conflicts: Conflict[]
-) {
+type Change = {
+  type: string
+  file: string
+  diff: DiffChunk[]
+}
+
+function getLineConflicts({ type, file, diff }: Change, conflicts: Conflict[]) {
   let offset = 0 // Line offset from preceding chunks in the same file.
   const lines = readFileSync(file, 'utf8').split(/\r?\n/)
-  for (const chunk of chunks) {
+  for (const chunk of diff) {
     let oldLength = 0 // Line count before any changes.
     let newLength = 0 // Line count after any changes.
 
@@ -81,19 +83,21 @@ function getLineConflicts(
     }
 
     const { inputRange, outputRange } = chunk
-    if (oldLength !== inputRange.length) {
-      conflicts.push({
-        file,
-        line: inputRange.start,
-        error: `Input range has length of ${inputRange.length}, but ${oldLength} lines exist in the diff.`,
-      })
-    }
-    if (newLength !== outputRange.length) {
-      conflicts.push({
-        file,
-        line: inputRange.start,
-        error: `Output range has length of ${outputRange.length}, but ${newLength} lines exist in the diff.`,
-      })
+    if (type !== 'rename' || !isNaN(inputRange.length)) {
+      if (oldLength !== inputRange.length) {
+        conflicts.push({
+          file,
+          line: inputRange.start,
+          error: `Input range has length of ${inputRange.length}, but ${oldLength} lines exist in the diff.`,
+        })
+      }
+      if (newLength !== outputRange.length) {
+        conflicts.push({
+          file,
+          line: inputRange.start,
+          error: `Output range has length of ${outputRange.length}, but ${newLength} lines exist in the diff.`,
+        })
+      }
     }
     const expectedLength = newLength > 0 ? inputRange.start + offset : 0
     if (outputRange.start !== expectedLength) {
