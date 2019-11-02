@@ -14,7 +14,7 @@ export function run() {
   if (args.w) {
     return watch(args).on('all', () => {
       log.clear()
-      if (!printConflicts(args)) {
+      if (!printConflicts(args, { reverse: true, limit: 10 })) {
         log('\n✨  No conflicts found.')
       }
     })
@@ -27,21 +27,44 @@ export function run() {
   }
 }
 
-function printConflicts(args: string[]) {
+type PrintOptions = {
+  reverse?: boolean
+  limit?: number
+}
+
+function printConflicts(
+  args: string[],
+  { reverse, limit = Infinity }: PrintOptions = {}
+) {
+  let count = 0
   let failed = false
-  args.forEach(patchFile => {
+  for (const patchFile of args) {
     if (!existsSync(patchFile)) {
       log(prefix + 'Patch does not exist: %s', log.yellow(patchFile))
-      return (failed = true)
+      failed = true
+      continue
     }
 
     const { conflicts } = check(patchFile)
-    if (!conflicts.length) return
+    if (!conflicts.length) continue
     failed = true
 
-    // We want the first conflict in a file to be printed last,
-    // since developers typically work from the top down.
-    conflicts.reverse()
+    const prevCount = count
+    count += conflicts.length
+    if (prevCount >= limit) {
+      continue
+    }
+    if (count > limit) {
+      conflicts.splice(limit - prevCount, Infinity)
+    }
+
+    log(log.bold('\n>> Found conflicts in patch:'), log.silver(patchFile))
+
+    // In watch mode, the conflicts are reversed, because the terminal
+    // sticks to the bottom of the output.
+    if (reverse) {
+      conflicts.reverse()
+    }
 
     type Range = { file: string; start: number; line: number; text: string }
     const ranges: Range[] = []
@@ -59,14 +82,21 @@ function printConflicts(args: string[]) {
         log(prefix + 'Rename failed. File already exists:', log.yellow(dest))
       } else if (line == null) {
         log(prefix + 'File does not exist:', log.yellow(file))
-      } else {
-        if (range && file == range.file && line == range.start - 1) {
+      } else if (
+        range &&
+        file == range.file &&
+        line == (reverse ? range.start - 1 : range.line + 1)
+      ) {
+        if (reverse) {
           range.text = text + '\n' + range.text
           range.start--
         } else {
-          range = { file, start: line, line, text }
-          ranges.push(range)
+          range.text += '\n' + range.text
+          range.line++
         }
+      } else {
+        range = { file, start: line, line, text }
+        ranges.push(range)
       }
     })
 
@@ -100,6 +130,9 @@ function printConflicts(args: string[]) {
         )
       }
     })
-  })
+  }
+  if (count > limit) {
+    log('\n' + log.lcyan(`+ ${count - limit} more`))
+  }
   return failed
 }
