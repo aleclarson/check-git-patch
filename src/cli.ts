@@ -91,7 +91,7 @@ function printConflicts(
           range.text = text + '\n' + range.text
           range.start--
         } else {
-          range.text += '\n' + range.text
+          range.text += '\n' + text
           range.line++
         }
       } else {
