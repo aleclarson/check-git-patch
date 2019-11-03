@@ -1,6 +1,6 @@
 {
   "name": "check-git-patch",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Find conflicts in a git patch",
   "main": "lib/check.js",
   "bin": "bin/check-git-patch",
